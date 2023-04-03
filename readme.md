@@ -5,13 +5,13 @@ This is repo for Freezor.
 ## backend - backend for Freezor
 
 
-Contract => Rust 
-Blockchain => Solana
-Frontend =>
+### Contract => Rust 
+### Blockchain => Solana
+#### Frontend =>
     - React
     - TailwindCSS
     - Redux for state management
-Backend =>
+### Backend =>
     - NodeJS
     - Express
     - PosgreSQL
