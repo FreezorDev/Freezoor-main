@@ -39,7 +39,8 @@ pub fn process_instruction(
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    if account.data_len() < (FreezorData::default().try_to_vec().unwrap().len()) {
+    if account.data_len() < std::mem::size_of::<FreezorData>() {
+
         msg!("Account data size is too small for FreezorData");
         return Err(ProgramError::AccountDataTooSmall);
     }
