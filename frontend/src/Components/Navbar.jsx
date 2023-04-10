@@ -38,7 +38,7 @@ const Navbar = () => {
               <a href="#" className="block py-2">Pricing</a>
               <a href="#" className="block py-2">About Us</a>
             </div>
-            <div className="hidden md:flex flex-col md:flex-row md:mx-6 text-gray-700">
+            <div className="hidden md:flex flex-col md:flex-row md:mx-6 text-gray-700 items-center">
               <a href="#" className="my-1 md:my-0 md:mx-4">Home</a>
               <a href="#" className="my-1 md:my-0 md:mx-4">About</a>
               <a href="#" className="my-1 md:my-0 md:mx-4">Pricing</a>
