@@ -2,10 +2,12 @@ import React from "react";
 import Navbar from "../../Components/Navbar";
 import freezor_illustration_1 from "../../assets/freezor_illustration_1.svg";
 import UploadFileSection from "./UploadFileSection";
+import SimpleTerms from "./SimpleTerms";
+import tweetExample from "../../assets/tweetExample.svg";
 
 export default function Landing() {
   return (
-    <div>
+    <div className="mb-72">
       <Navbar />
 
       <div className="flex justify-center flex-col sm:flex-row sm:w-4/5 mx-auto sm:mt-28 mt-10 px-2 sm:space-x-72">
@@ -35,10 +37,28 @@ export default function Landing() {
           i.e. cannot be changed. As a result, you now have a tamper-resistant
           proof of ownership of a document/file. 
         </p>
-        <p className="text-xl sm:text-2xl leading-relaxed tracking-wide font-thin mt-10">
-          In Simple terms,
+        <SimpleTerms />
+      </div>
+
+      <div className="flex justify-center flex-col sm:flex-row sm:w-4/5 mx-auto sm:mt-28 mt-10 px-2 sm:space-x-72">
+        <div>
+        <p className="text-xl sm:text-3xl leading-relaxed tracking-wide font-semibold">
+          How do I prove this in the court?
         </p>
-       
+        <p className="leading-realxed tracking-wide mt-10">
+          Simply download our timestamp certificate and keep it handy. <br></br> <br></br>The
+          certificate includes the hash number of the document. Every time you
+          will try to upload the same document (with absolutely no changes) on
+          our platform it will generate the same hash number. Since this hash
+          number is on Blockchain (as shown in the certificate), the existence
+          of the document is proved. 
+        </p>
+        </div>
+        <img
+          src={tweetExample}
+          alt="tweetExample"
+          className="px-3 mt-2 sm:mt-0 "
+        />
       </div>
     </div>
   );
