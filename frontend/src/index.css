@@ -1,3 +1,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* src/App.css or src/App.scss */
+body {
+    font-family: 'Poppins', sans-serif;
+  }
+  
+
+.primaryBg{
+    background-color: #082691;
+}
+
+.hoverBg:hover{
+    background-color: #092074;
+}
+
+.brandText{
+    color: #082691;
+}
+
+.customShadow-1{
+   
+        box-shadow: 0px 0px 25px 7px rgba(228, 239, 255, 1);
+     
+}

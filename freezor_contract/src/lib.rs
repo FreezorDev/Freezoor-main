@@ -15,15 +15,6 @@ pub struct FreezorData {
     pub email_hash: String,
 }
 
-impl Default for FreezorData {
-    fn default() -> Self {
-        Self {
-            document_hash: String::new(),
-            email_hash: String::new(),
-        }
-    }
-}
-
 // Entry point for the smart contract
 entrypoint!(process_instruction);
 pub fn process_instruction(
@@ -39,12 +30,6 @@ pub fn process_instruction(
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    if account.data_len() < std::mem::size_of::<FreezorData>() {
-
-        msg!("Account data size is too small for FreezorData");
-        return Err(ProgramError::AccountDataTooSmall);
-    }
-
     let mut freezor_data = FreezorData::try_from_slice(&account.data.borrow())?;
     let (document_hash, email_hash) = parse_instruction_data(instruction_data)?;
 
@@ -56,7 +41,7 @@ pub fn process_instruction(
     Ok(())
 }
 
-// For parsing the instruction data
+//for parsing the instruction data
 fn parse_instruction_data(instruction_data: &[u8]) -> Result<(String, String), ProgramError> {
     let data = std::str::from_utf8(instruction_data)
         .map_err(|_| ProgramError::InvalidInstructionData)?;

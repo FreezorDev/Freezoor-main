@@ -7,3 +7,9 @@ I don't think any other thing is needed to store on-chain and using these 2 thin
 
 
 Testnet ProgramID = FZFzNcom35p3ZtUsGyTNTcmbz7ECDVQS4yqXAsL8f1FD 
+
+
+future schema:
+
+- SignerKey:
+         

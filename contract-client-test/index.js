@@ -1,65 +1,97 @@
-require('dotenv').config();
-const solanaWeb3 = require('@solana/web3.js');
 const fs = require('fs');
+const { Connection, Account, PublicKey, SystemProgram, Transaction, TransactionInstruction, sendAndConfirmTransaction } = require('@solana/web3.js');
+const borsh = require('borsh');
 
-// Replace with your own values
-const PRIVATE_KEY_FILE = 'private_key.json';
+const programId = new PublicKey('E3s69Ww8GhHuQgVqqBkykTRAwHcfxovXnGumdXJbU4jh');
+const walletJSONPath = 'wallet.json';
 
-const PROGRAM_ID = "H3fU4MPURKgputAJBAp9FqdrYbekc8WumwbjDBt96ygT"
+// Define the schema for FreezorData
+class FreezorData {
+  constructor(fields = { document_hash: '', email_hash: '' }) {
+    this.document_hash = fields.document_hash;
+    this.email_hash = fields.email_hash;
+  }
+}
 
-const DOCUMENT_HASH = '4f9c3633e8859bbe74114c4f82aa23ada90dc9a7b59643fd36451239ee1163ea'; // sample document hash
-const EMAIL_HASH = '2b01fb431edfe93bdf096bb312c1e4d53e86dd73a9ae41873366645245656d2d'; // sample email hash
+const FreezorDataSchema = new Map([
+  [FreezorData, {
+    kind: 'struct',
+    fields: [
+      ['document_hash', 'string'],
+      ['email_hash', 'string'],
+    ],
+  }],
+]);
 
-(async () => {
-  // Read and parse the private key from a JSON file
-  const privateKeyJSON = JSON.parse(fs.readFileSync(PRIVATE_KEY_FILE, 'utf-8'));
-  const privateKey = new Uint8Array(privateKeyJSON);
+// Helper function to deserialize data from the smart contract
+function deserializeFreezorData(data) {
+  return borsh.deserializeUnchecked(FreezorDataSchema, FreezorData, data);
+}
 
-  // Create a connection to the Solana cluster
-  const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
+// Helper function to serialize data for the smart contract
+function serializeFreezorData(data) {
+  return borsh.serialize(FreezorDataSchema, data);
+}
 
-  // Create a keypair from the private key
-  const payerAccount = new solanaWeb3.Account(privateKey);
+function loadWalletSecretKey(walletPath) {
+  const walletJSON = JSON.parse(fs.readFileSync(walletPath, 'utf-8'));
+  const secretKey = Uint8Array.from(walletJSON);
+  return secretKey;
+}
 
-  // Get the public key of the program from the program ID
-  const programId = new solanaWeb3.PublicKey(PROGRAM_ID);
+// Interact with the smart contract
+async function storeData(documentHash, emailHash) {
+  const secretKey = loadWalletSecretKey(walletJSONPath);
+  const walletAccount = new Account(secretKey);
 
-  // Create a new account to store the FreezorData
-  const freezorDataAccount = new solanaWeb3.Account();
+  const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+  const lamports = await connection.getMinimumBalanceForRentExemption(serializeFreezorData(new FreezorData()).length);
 
-  // Calculate the minimum balance required to create the account
-  const lamports = await connection.getMinimumBalanceForRentExemption(1024);
+  const dataAccount = new Account();
+  const createAccountInstruction = SystemProgram.createAccount({
+    fromPubkey: walletAccount.publicKey,
+    newAccountPubkey: dataAccount.publicKey,
+    lamports,
+    space: serializeFreezorData(new FreezorData()).length,
+    programId,
+  });
 
-  // Create a transaction to create the FreezorData account
-  const createAccountTransaction = new solanaWeb3.Transaction().add(
-    solanaWeb3.SystemProgram.createAccount({
-      fromPubkey: payerAccount.publicKey,
-      newAccountPubkey: freezorDataAccount.publicKey,
-      lamports,
-      space: 1024,
-      programId,
-    })
-  );
+  const instructionData = Buffer.from(`${documentHash}|${emailHash}`, "utf8");
+  console.log(instructionData);
+  const instruction = new TransactionInstruction({
+    keys: [
+      { pubkey: dataAccount.publicKey, isSigner: false, isWritable: true },
+    ],
+    programId,
+    data: instructionData,
+  });
 
-  // Sign and send the create account transaction
-  await solanaWeb3.sendAndConfirmTransaction(connection, createAccountTransaction, [payerAccount, freezorDataAccount]);
+  const transaction = new Transaction().add(createAccountInstruction, instruction);
+  transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+  transaction.setSigners(walletAccount.publicKey, dataAccount.publicKey);
+  transaction.sign(walletAccount, dataAccount);
 
-  // Create the instruction data by concatenating the documentHash and emailHash separated by a '|'
-  const instructionData = Buffer.from(DOCUMENT_HASH + '|' + EMAIL_HASH, 'utf-8');
+  const txid = await sendAndConfirmTransaction(connection, transaction, [walletAccount, dataAccount]);
+  console.log('Transaction sent:', txid);
 
-  // Create the transaction to send the instruction to the smart contract
-  const transaction = new solanaWeb3.Transaction().add(
-    new solanaWeb3.TransactionInstruction({
-      keys: [
-        { pubkey: freezorDataAccount.publicKey, isSigner: true, isWritable: true },
-      ],
-      programId,
-      data: instructionData,
-    })
-  );
 
-  // Sign and send the transaction
-  await solanaWeb3.sendAndConfirmTransaction(connection, transaction, [payerAccount, freezorDataAccount]);
 
-  console.log('Transaction sent and confirmed');
-})();
+
+  return dataAccount.publicKey;
+}
+
+
+
+async function main() {
+  const documentHash = 'test';
+  const emailHash = 'test2';
+
+  try {
+    const dataAccountPubkey = await storeData(documentHash, emailHash);
+    console.log('Data stored in account:', dataAccountPubkey.toBase58());
+  } catch (err) {
+    console.error('Error:', err);
+  }
+}
+
+main();
